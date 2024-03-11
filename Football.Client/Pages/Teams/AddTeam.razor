@@ -1,0 +1,63 @@
+﻿@page "/addteam"
+@using Football.Client.Objects
+@inject HttpClient httpClient
+@inject NotificationService NotificationService
+@inject HubConnection hubConnection
+
+<RadzenTemplateForm Data="@_team">
+    <RadzenFieldset Text="Добавление команды">
+        <!-- First Name -->
+        <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenLabel Text="Название" Component="Name" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="8">
+                <RadzenTextBox Style="width: 100%;" Name="Name" Value="@_team.Name" Change=@(args => OnFirstNameTextBoxChanged(args)) />
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenFieldset>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+        <RadzenButton Click="@(args => Submit())" ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Добавить" />
+    </RadzenStack>
+</RadzenTemplateForm>
+
+@code {
+
+    // TODO: Или просто сделать textbox и кнопку для добавление команды??
+
+    private Team _team = new();
+
+    async void Submit()
+    {
+        var response = await httpClient.PostAsJsonAsync("teams", _team);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            var error = await response.Content.ReadFromJsonAsync<string>();
+            ShowNotification(NotificationSeverity.Warning, "Ошибка при добавления", error);
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            await hubConnection.SendAsync("AddTeam", _team);
+            ShowNotification(NotificationSeverity.Success, $"Команда {_team.Name} была успешно добавлена", "");
+            _team = new();
+        }
+    }
+
+    void OnFirstNameTextBoxChanged(string newValue)
+    {
+        _team.Name = newValue;
+    }
+
+    void ShowNotification(NotificationSeverity severity, string summary, string details)
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Warning,
+            Duration = 40000,
+            SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">@summary</RadzenText>,
+            DetailContent = ns => @<RadzenText>@details</RadzenText>
+        });
+    }
+}

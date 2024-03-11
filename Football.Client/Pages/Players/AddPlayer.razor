@@ -1,6 +1,7 @@
 ﻿@page "/addplayer"
 @using Football.Client.Objects
 @using Football.Client.Objects.EnumBox
+@using Football.Client.Pages.Teams
 @inject NotificationService NotificationService;
 @inject HttpClient _httpClient
 @inject DialogService DialogService;
@@ -125,7 +126,9 @@
 
     async void OpenTeamFactory()
     {
-
+        await DialogService.OpenAsync<AddTeam>($"Add Team",
+            new Dictionary<string, object>(),
+            new DialogOptions() { Width = "700px", Height = "520px" });
     }
 
     async void Submit()
@@ -141,7 +144,7 @@
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             var error = await response.Content.ReadFromJsonAsync<string>();
-            ShowNotification(NotificationSeverity.Warning, "Ошибка добавления", error);
+            ShowNotification(NotificationSeverity.Warning, "Ошибка при добавления", error);
         }
         else if (response.StatusCode == System.Net.HttpStatusCode.OK)
         {
