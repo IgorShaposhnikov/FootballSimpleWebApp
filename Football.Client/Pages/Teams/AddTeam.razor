@@ -1,11 +1,12 @@
 ﻿@page "/addteam"
 @using Football.Client.Objects
+
 @inject HttpClient httpClient
 @inject NotificationService NotificationService
 @inject HubConnection hubConnection
 
 <RadzenTemplateForm Data="@_team">
-    <RadzenFieldset Text="Добавление команды">
+    <RadzenFieldset>
         <!-- First Name -->
         <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="4">
@@ -28,6 +29,15 @@
 
     private Team _team = new();
 
+
+    #region Private Methods
+
+
+    /// <summary>
+    /// Вызывается при нажатии на кнопку Submit.
+    /// Делает post запрос по api/teams.
+    /// Ожидает ответ, после чего отправляет сообщение через SignalR и выводит уведомление.
+    /// </summary>
     async void Submit()
     {
         var response = await httpClient.PostAsJsonAsync("teams", _team);
@@ -45,19 +55,33 @@
         }
     }
 
+    /// <summary>
+    /// Вызывается при изменении Name TextBox. Обновляет поле _teamName.
+    /// </summary>
+    /// <param name="newValue">Новое значение</param>
     void OnFirstNameTextBoxChanged(string newValue)
     {
         _team.Name = newValue;
     }
 
+
+    /// <summary>
+    /// Позывает уведомление.
+    /// </summary>
+    /// <param name="severity">Тип уведомления</param>
+    /// <param name="summary">Заголовок</param>
+    /// <param name="details">Деталиы</param>
     void ShowNotification(NotificationSeverity severity, string summary, string details)
     {
         NotificationService.Notify(new NotificationMessage
         {
-            Severity = NotificationSeverity.Warning,
-            Duration = 40000,
+            Severity = severity,
+            Duration = 4000,
             SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">@summary</RadzenText>,
             DetailContent = ns => @<RadzenText>@details</RadzenText>
         });
     }
+
+
+    #endregion Private Methods
 }

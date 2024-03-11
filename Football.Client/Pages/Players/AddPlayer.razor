@@ -2,6 +2,7 @@
 @using Football.Client.Objects
 @using Football.Client.Objects.EnumBox
 @using Football.Client.Pages.Teams
+
 @inject NotificationService NotificationService;
 @inject HttpClient _httpClient
 @inject DialogService DialogService;
@@ -99,13 +100,19 @@
     private IEnumerable<EnumBoxBase<Country>> countries;
     private Country selectedCountry;
 
-    // birth date
     private DateTime _birthdate = DateTime.Now;
 
-    // avaliable teams
     private List<Team> teams = new();
     private Team selectedTeam = new();
 
+
+    #region Public & Protected Methods
+
+
+    /// <summary>
+    /// Подписываемся на сообщения SignalR. Подготавливаем enum'ы к выводу в ComboBox.
+    /// Подгружаем список футбольных команд, выбираем первую из списка.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -119,18 +126,28 @@
         selectedTeam = teams.FirstOrDefault() ?? new();
     }
 
-    void OnTeamAdded(Team team)
-    {
-        teams.Add(team);
-    }
 
+    #endregion Public & Protected Methods
+
+
+    #region Private Methods
+
+
+    /// <summary>
+    /// Открывает модальное окно для добавления команды.
+    /// </summary>
     async void OpenTeamFactory()
     {
-        await DialogService.OpenAsync<AddTeam>($"Add Team",
+        await DialogService.OpenAsync<AddTeam>($"Добавление футбольной команды",
             new Dictionary<string, object>(),
             new DialogOptions() { Width = "700px", Height = "520px" });
     }
 
+    /// <summary>
+    /// Вызывается при нажатии на кнопку Submit.
+    /// Заполняет объект _player информацией, после чего делает post запрос по api/players.
+    /// Ожидает ответ, после чего отправляет сообщение через SignalR и выводит уведомление.
+    /// </summary>
     async void Submit()
     {
         _player.Gender = selectedGender;
@@ -154,24 +171,50 @@
         }
     }
 
+
+    /// <summary>
+    /// Добавляет команду в список команд.
+    /// </summary>
+    void OnTeamAdded(Team team)
+    {
+        teams.Add(team);
+    }
+
+    /// <summary>
+    /// Вызывается при изменении FirstName TextBox.
+    /// </summary>
+    /// <param name="newValue">Новое значение</param>
     void OnFirstNameTextBoxChanged(string newValue)
     {
         _player.FirstName = newValue;
     }
 
+    /// <summary>
+    /// Вызывается при изменении LastName TextBox.
+    /// </summary>
+    /// <param name="newValue">Новое значение</param>
     void OnLastNameTextBoxChanged(string newValue)
     {
         _player.LastName = newValue;
     }
 
+    /// <summary>
+    /// Показывает уведомления.
+    /// </summary>
+    /// <param name="severity">Тип уведомления</param>
+    /// <param name="summary">Заголовок</param>
+    /// <param name="details">Детали</param>
     void ShowNotification(NotificationSeverity severity, string summary, string details)
     {
         NotificationService.Notify(new NotificationMessage
         {
             Severity = severity,
-            Duration = 40000,
+            Duration = 4000,
             SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">@summary</RadzenText>,
             DetailContent = ns => @<RadzenText>@details</RadzenText>
         });
     }
+
+
+    #endregion Private Methods
 }

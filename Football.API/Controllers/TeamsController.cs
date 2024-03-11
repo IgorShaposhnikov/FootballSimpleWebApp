@@ -10,19 +10,30 @@ namespace Football.API.Controllers
     {
         private readonly FootballDbContext _dbContext;
 
+
+        #region Constructors
+
+
         public TeamsController(FootballDbContext dataContext)
         {
             _dbContext = dataContext;
         }
 
+
+        #endregion Constructors
+
+
+        #region Public Methods
+
+
         [HttpGet]
-        public async Task<ActionResult<List<Team>>> GetList()
+        public async Task<ActionResult<List<Team>>> GetTeamsList()
         {
             return Ok(_dbContext.Teams);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Team>> GetTeamById(Guid id)
+        public async Task<ActionResult<Team>> GetTeam(Guid id)
         {
             return Ok(_dbContext.Teams.Where(team => team.Id == id).FirstOrDefault());
         }
@@ -38,5 +49,8 @@ namespace Football.API.Controllers
 
             return Ok(team);
         }
+
+
+        #endregion Public Methods
     }
 }

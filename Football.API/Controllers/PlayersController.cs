@@ -11,13 +11,23 @@ namespace Football.API.Controllers
         private readonly FootballDbContext _dbContext;
 
 
+        #region Contructors
+
+
         public PlayersController(FootballDbContext dataContext)
         {
             _dbContext = dataContext;
         }
 
+
+        #endregion Constructors
+
+
+        #region Public Methods
+
+
         [HttpGet]
-        public async Task<IActionResult> GetList()
+        public async Task<IActionResult> GetPlayers()
         {
             return Ok(_dbContext.Players);
         }
@@ -31,6 +41,18 @@ namespace Football.API.Controllers
                 return NotFound($"Player with id {id} not found.");
 
             return Ok(player);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Guid>> AddPlayer(Player player)
+        {
+            player.Id = Guid.NewGuid();
+
+            _dbContext.Players.Add(player);
+
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(player.Id);
         }
 
         [HttpPut]
@@ -53,18 +75,6 @@ namespace Football.API.Controllers
             return Ok(true);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Guid>> AddPlayer(Player player)
-        {
-            player.Id = Guid.NewGuid();
-
-            _dbContext.Players.Add(player);
-
-            await _dbContext.SaveChangesAsync();
-
-            return Ok(player.Id);
-        }
-
         [HttpDelete]
         public async Task<ActionResult<bool>> RemovePlayer(Guid id)
         {
@@ -78,5 +88,8 @@ namespace Football.API.Controllers
 
             return Ok(true);
         }
+
+
+        #endregion Public Methods
     }
 }

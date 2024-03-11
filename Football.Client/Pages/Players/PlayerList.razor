@@ -15,13 +15,13 @@ else
         <Columns>
             <RadzenDataGridColumn TItem="Player" Property="FirstName" Title="Имя" Frozen="true" Width="160px" />
             <RadzenDataGridColumn TItem="Player" Property="LastName" Title="Фамилия" Width="160px" />
-            <RadzenDataGridColumn TItem="Player" Property="Gender" Title="Пол" Width="200px" />
+            <RadzenDataGridColumn TItem="Player" Property="Gender" Title="Пол" Width="160px" />
             <RadzenDataGridColumn TItem="Player" Property="Birthday" Title="День рождения" Width="120px" FormatString="{0:MM/dd/yyyy}" />
             <RadzenDataGridColumn TItem="Player" Property="Country" Title="Страна" FormatString="{0:d}" Width="160px" />
             <RadzenDataGridColumn TItem="Player" Property="TeamName" Title="Команда" Width="160px" />
             <RadzenDataGridColumn TItem="Player">
                 <Template Context="data">
-                    <RadzenButton ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" Icon="info" class="m-1" Click="@(args => OpenPlayerEditor(data.Id))" Text="Редактировать" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" Icon="info" class="m-1" Click="@(args => OpenPlayerEditor(data.Id))" Text="Изменить" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -31,12 +31,18 @@ else
 @code
 {
     private RadzenDataGrid<Player> PlayersGrid = new RadzenDataGrid<Player>();
+    private bool _isLoaded;
 
     private List<Player> _players = new();
     private Team[] _teams = null;
 
-    private bool _isLoaded;
 
+    #region Public & Protected Methods    
+
+
+    /// <summary>
+    /// Подписываемся на SignalR изменения. Вызывает метод LoadData.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         // подписываемся на обновления хаба.
@@ -46,6 +52,16 @@ else
         LoadData();
     }
 
+    #endregion Public & Protected Methods
+
+
+    #region Private Methods
+
+
+    /// <summary>
+    /// Обновляет информацию об игроке. Вызывает метод `RadzenGrid`.Reload();
+    /// </summary>
+    /// <param name="updatedPlayer">Новая информация об игроке</param>
     void OnPlayerUpdated(Player updatedPlayer)
     {
         for (var i = 0; i < _players.Count; i++)
@@ -55,20 +71,29 @@ else
         } 
 
         InvokeAsync(StateHasChanged);
-        // обновляем форму ибо игрок был изменен
         PlayersGrid.Reload();
     }
 
+    /// <summary>
+    /// Добавляет игрока в список.
+    /// Для того, чтобы новые данные отобразились в RadzenGrid,
+    /// используем метод reload.
+    /// </summary>
+    /// <param name="player">Игрок</param>
+    /// <param name="teamName">Команда игрока</param>
     void OnPlayerAdded(Player player, string teamName)
     {
         player.TeamName = teamName;
         _players.Add(player);
         InvokeAsync(StateHasChanged);
 
-        // обновляем форму ибо пришел новый игрок
         PlayersGrid.Reload();
     }
 
+    /// <summary>
+    /// Загружаем список игроков и команд.
+    /// Проверяем, что команда существует, иначе устанавливаем Unknown.
+    /// </summary>
     async void LoadData()
     {
         _players = await _httpClient.GetFromJsonAsync<List<Player>>("players") ?? _players;
@@ -84,10 +109,17 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+    /// <summary>
+    /// Открывает модальное окно редактирование игрока.
+    /// </summary>
+    /// <param name="playerId">Guid игрока которого хотим редактировать</param>
     async Task OpenPlayerEditor(Guid playerId)
     {
         await DialogService.OpenAsync<PlayerEdit>($"Редактирование игрока",
             new Dictionary<string, object>() { { "PlayerId", playerId } },
             new DialogOptions() { Width = "700px", Height = "720px" });
     }
+
+
+    #endregion Private Methods
 }
