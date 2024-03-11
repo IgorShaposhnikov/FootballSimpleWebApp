@@ -1,3 +1,4 @@
+using Football.API.Hubs;
 using Football.API.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,5 +31,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapHub<FootballHub>("/football-hub");
 
 app.Run();

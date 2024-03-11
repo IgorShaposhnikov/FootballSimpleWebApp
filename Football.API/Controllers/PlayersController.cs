@@ -2,13 +2,14 @@
 using Football.Domain;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FootballTeam.API.Controllers
+namespace Football.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class PlayersController : ControllerBase
     {
         private readonly FootballDbContext _dbContext;
+
 
         public PlayersController(FootballDbContext dataContext)
         {
