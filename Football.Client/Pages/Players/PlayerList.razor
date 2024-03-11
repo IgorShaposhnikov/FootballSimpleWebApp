@@ -1,0 +1,75 @@
+﻿@page "/players"
+@inject HttpClient _httpClient
+@inject DialogService DialogService
+@inject HubConnection hubConnection
+@using Football.Client.Objects
+
+@if (!_isLoaded)
+{
+    <p>Loading Players...</p>
+}
+else
+{
+    <RadzenDataGrid EmptyText="Игроки отсутсвуют добавьте их во вкладке Добавить игрока" @ref="PlayersGrid" AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="10" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                    Data="@_players" TItem="Player" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" SelectionMode="DataGridSelectionMode.Single">
+        <Columns>
+            <RadzenDataGridColumn TItem="Player" Property="FirstName" Title="Имя" Frozen="true" Width="160px" />
+            <RadzenDataGridColumn TItem="Player" Property="LastName" Title="Фамилия" Width="160px" />
+            <RadzenDataGridColumn TItem="Player" Property="Gender" Title="Пол" Width="200px" />
+            <RadzenDataGridColumn TItem="Player" Property="Birthday" Title="День рождения" Width="120px" FormatString="{0:MM/dd/yyyy}" />
+            <RadzenDataGridColumn TItem="Player" Property="Country" Title="Страна" FormatString="{0:d}" Width="160px" />
+            <RadzenDataGridColumn TItem="Player" Property="TeamName" Title="Команда" Width="160px" />
+            <RadzenDataGridColumn TItem="Player">
+                <Template Context="data">
+                    <RadzenButton ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" Icon="info" class="m-1" Click="@(args => OpenPlayerEditor(data.Id))" Text="Редактировать" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code
+{
+    private RadzenDataGrid<Player> PlayersGrid = new RadzenDataGrid<Player>();
+
+    private List<Player> _players = new();
+    private Team[] _teams = null;
+
+    private bool _isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // подписываемся на обновления хаба.
+        hubConnection.On<Player, string>("PlayerAdded", OnPlayerAdded);
+        LoadData();
+    }
+
+    void OnPlayerAdded(Player player, string teamName)
+    {
+        player.TeamName = teamName;
+        _players.Add(player);
+        InvokeAsync(StateHasChanged);
+
+        // обновляем форму ибо пришел новый игрок
+        PlayersGrid.Reload();
+    }
+
+    async void LoadData()
+    {
+        _players = await _httpClient.GetFromJsonAsync<List<Player>>("players") ?? _players;
+        _teams = await _httpClient.GetFromJsonAsync<Team[]>("teams");
+
+        foreach (var player in _players)
+        {
+            var team = _teams.Where(team => team.Id == player.TeamId).FirstOrDefault();
+            player.TeamName = team == null ? "Unknown" : team.Name;
+        }
+
+        _isLoaded = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task OpenPlayerEditor(Guid playerId)
+    {
+    }
+}

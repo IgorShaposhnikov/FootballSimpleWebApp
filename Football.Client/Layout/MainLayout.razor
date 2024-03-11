@@ -1,3 +1,30 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="page">
+
+    <RadzenComponents />
+
+    <RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
+        <RadzenHeader>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                <RadzenLabel Text="Header" />
+            </RadzenStack>
+        </RadzenHeader>
+        <RadzenSidebar @bind-Expanded="@sidebarExpanded">
+            <RadzenPanelMenu>
+                <RadzenPanelMenuItem Path="players" Text="Players" Icon="home" Selected="true"  />
+                <RadzenPanelMenuItem Path="addplayer" Text="Add player" Icon="account_box" />
+            </RadzenPanelMenu>
+        </RadzenSidebar>
+        <RadzenBody>
+            <div class="rz-p-4">
+                @Body
+            </div>
+        </RadzenBody>
+    </RadzenLayout>
+</div>
+
+@code {
+    bool sidebarExpanded = true;
+}
