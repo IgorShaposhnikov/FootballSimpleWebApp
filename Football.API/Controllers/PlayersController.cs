@@ -1,5 +1,5 @@
-﻿using Football.API.Persistence;
-using Football.Domain;
+﻿using Football.Domain;
+using Football.Persistence.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Football.API.Controllers

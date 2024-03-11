@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Football.API", "Football.API\Football.API.csproj", "{D960E2D7-4DB4-4159-836A-E946422F1B94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Football.Persistence", "Football.Persistence\Football.Persistence.csproj", "{688B176D-9B83-400B-8476-6B260A5C80C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{D960E2D7-4DB4-4159-836A-E946422F1B94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D960E2D7-4DB4-4159-836A-E946422F1B94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D960E2D7-4DB4-4159-836A-E946422F1B94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{688B176D-9B83-400B-8476-6B260A5C80C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{688B176D-9B83-400B-8476-6B260A5C80C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{688B176D-9B83-400B-8476-6B260A5C80C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{688B176D-9B83-400B-8476-6B260A5C80C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
