@@ -1,8 +1,10 @@
-﻿@page "/players"
+﻿@page "/"
+@page "/players"
+@using Football.Client.Objects
+
 @inject HttpClient _httpClient
 @inject DialogService DialogService
 @inject HubConnection hubConnection
-@using Football.Client.Objects
 
 @if (!_isLoaded)
 {
@@ -45,9 +47,11 @@ else
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+
         // подписываемся на обновления хаба.
         hubConnection.On<Player, string>("PlayerAdded", OnPlayerAdded);
-        hubConnection.On<Player>("PlayerUpdated", OnPlayerUpdated);
+        hubConnection.On<Player, string>("PlayerUpdated", OnPlayerUpdated);
 
         LoadData();
     }
@@ -62,8 +66,9 @@ else
     /// Обновляет информацию об игроке. Вызывает метод `RadzenGrid`.Reload();
     /// </summary>
     /// <param name="updatedPlayer">Новая информация об игроке</param>
-    void OnPlayerUpdated(Player updatedPlayer)
+    void OnPlayerUpdated(Player updatedPlayer, string teamName)
     {
+        updatedPlayer.TeamName = teamName;
         for (var i = 0; i < _players.Count; i++)
         {
             if (_players[i].Id == updatedPlayer.Id)

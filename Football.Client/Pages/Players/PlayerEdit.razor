@@ -190,7 +190,7 @@ else
         }
         else if (response.StatusCode == System.Net.HttpStatusCode.OK)
         {
-            await hubConnection.SendAsync("UpdatePlayer", _player);
+            await hubConnection.SendAsync("UpdatePlayer", _player, selectedTeam.Name);
             ShowNotification(NotificationSeverity.Success, "Данные об игроке были успешно изменены", "");
         }
     }
