@@ -18,11 +18,10 @@ namespace Football.API.Hubs
         /// <summary>
         /// Сообщает клиентам об обновлении данных игрока.
         /// </summary>
-        /// <param name="id">Guid игрока данные о котором были обновлены</param>
         /// <param name="player">Эксемпляр обновленного игрока</param>
-        public async Task UpdatePlayer(Guid id, Player player)
+        public async Task UpdatePlayer(Player player)
         {
-            await Clients.All.SendAsync("PlayerUpdated", id, player);
+            await Clients.All.SendAsync("PlayerUpdated", player);
         }
 
         /// <summary>

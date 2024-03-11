@@ -1,0 +1,205 @@
+﻿@page "/players/edit/{PlayerId:Guid}"
+@using Football.Client.Objects
+@using Football.Client.Objects.EnumBox
+@using Football.Client.Pages.Teams
+
+@inject HttpClient _httpClient
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject HubConnection hubConnection
+
+@if (_player == null)
+{
+    <h1>Загрузка данных об игроке...</h1>
+}
+else
+{
+    <RadzenTemplateForm Data="@_player">
+        <RadzenFieldset>
+            <RadzenStack>
+
+                <!-- First Name -->
+                <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Имя" Component="Name" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenTextBox Style="width: 100%;" Name="Name" Value="@_player.FirstName" Change=@(args => OnFirstNameTextBoxChanged(args)) />
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <!-- Last Name -->
+                <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Фамилия" Component="LastName" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenTextBox Style="width: 100%;" Name="LastName" Value="@_player.LastName" Change=@(args => OnLastNameTextBoxChanged(args)) />
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <!-- Gender -->
+                <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Пол" Component="Gender" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenDropDown Data="@genders" TextProperty="EnumName" ValueProperty="EnumValue" @bind-Value=@selectedGender style="width: 100%;">
+                        </RadzenDropDown>
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <!-- Country -->
+                <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Страна" Component="Country" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenDropDown Data="@countries" TextProperty="EnumName" ValueProperty="EnumValue" @bind-Value=@selectedCountry style="width: 100%;">
+                        </RadzenDropDown>
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <!-- Birthday -->
+                <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Дата рождения (mm/dd/yyyy)" Component="Birthdate" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenDatePicker @bind-Value=@_birthdate Name="RadzenDatePickerBindValue" ShowCalendarWeek DateFormat="MM/dd/yyyy" />
+                     </RadzenColumn>
+                 </RadzenRow>
+
+
+                 <!-- Team Name -->
+                 <RadzenRow class="rz-p-0 rz-p-lg-4" AlignItems="AlignItems.Center">
+                     <RadzenColumn Size="12" SizeMD="4">
+                         <RadzenLabel Text="Команда" Component="Team" />
+                     </RadzenColumn>
+
+                     <RadzenColumn Size="12" SizeMD="6">
+                         <RadzenDropDown Data="@teams" TextProperty="Name" @bind-Value=@selectedTeam style="width: calc(100% - 30px);">
+                         </RadzenDropDown>
+                     </RadzenColumn>
+                     <RadzenColumn Size="12" SizeMD="2">
+                         <RadzenButton Text="Добавить команду" Click="@(args => OpenTeamFactory())" />
+                     </RadzenColumn>
+                 </RadzenRow>
+
+             </RadzenStack>
+         </RadzenFieldset>
+
+         <!-- Buttons -->
+         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+             <RadzenButton Click="@(args => Submit())" ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" />
+         </RadzenStack>
+     </RadzenTemplateForm>
+}
+
+@code {
+    [Parameter]
+    public Guid PlayerId { get; set; }
+
+    private Player? _player;
+
+    private IEnumerable<EnumBoxBase<Gender>> genders;
+    private Gender selectedGender;
+
+    private IEnumerable<EnumBoxBase<Country>> countries;
+    private Country selectedCountry;
+
+    private DateTime _birthdate;
+
+    private List<Team> teams = new();
+    private Team? selectedTeam = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        hubConnection.On<Team>("TeamAdded", OnTeamAdded);
+
+        genders = EnumBoxBase<Gender>.EnumToBoxedValues();
+        countries = EnumBoxBase<Country>.EnumToBoxedValues();
+
+        LoadData();
+    }
+
+    void OnTeamAdded(Team team)
+    {
+        teams.Add(team);
+    }
+
+    async void LoadData()
+    {
+        _player = await _httpClient.GetFromJsonAsync<Player>($"players/{PlayerId}");
+        if (_player != null) 
+        { 
+            selectedGender = _player.Gender;
+            selectedCountry = _player.Country;
+            _birthdate = _player.Birthday;
+
+            teams = await _httpClient.GetFromJsonAsync<List<Team>>("teams") ?? teams;
+            selectedTeam = teams.Where(t => t.Id == _player.TeamId).FirstOrDefault();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    } 
+
+    async void OpenTeamFactory()
+    {
+        await DialogService.OpenAsync<AddTeam>($"Add Team",
+            new Dictionary<string, object>() { },
+            new DialogOptions() { Width = "700px", Height = "720px" });
+    }
+
+    async void Submit()
+    {
+        _player.Gender = selectedGender;
+        _player.Country = selectedCountry;
+        _player.Birthday = _birthdate;
+        _player.TeamId = selectedTeam.Id;
+
+        var response = await _httpClient.PutAsJsonAsync("players", _player);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            var error = await response.Content.ReadFromJsonAsync<string>();
+            ShowNotification(NotificationSeverity.Warning, "При изменении данных произошла ошибка", error);
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            await hubConnection.SendAsync("UpdatePlayer", _player);
+            ShowNotification(NotificationSeverity.Success, "Данные об игроке были успешно изменены", "");
+        }
+    }
+
+
+    #region Notification
+
+
+    void ShowNotification(NotificationSeverity severity, string summary, string details)
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = severity,
+            Duration = 40000,
+            SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">@summary</RadzenText>,
+            DetailContent = ns => @<RadzenText>@details</RadzenText>
+        });
+    }
+
+
+    #endregion Notification
+
+
+    void OnFirstNameTextBoxChanged(string newValue)
+    {
+        _player.FirstName = newValue;
+    }
+
+    void OnLastNameTextBoxChanged(string newValue)
+    {
+        _player.LastName = newValue;
+    }
+}

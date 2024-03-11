@@ -6,7 +6,7 @@
 
 @if (!_isLoaded)
 {
-    <p>Loading Players...</p>
+    <p>Загрузка информации о игроках...</p>
 }
 else
 {
@@ -41,7 +41,22 @@ else
     {
         // подписываемся на обновления хаба.
         hubConnection.On<Player, string>("PlayerAdded", OnPlayerAdded);
+        hubConnection.On<Player>("PlayerUpdated", OnPlayerUpdated);
+
         LoadData();
+    }
+
+    void OnPlayerUpdated(Player updatedPlayer)
+    {
+        for (var i = 0; i < _players.Count; i++)
+        {
+            if (_players[i].Id == updatedPlayer.Id)
+                _players[i] = updatedPlayer;
+        } 
+
+        InvokeAsync(StateHasChanged);
+        // обновляем форму ибо игрок был изменен
+        PlayersGrid.Reload();
     }
 
     void OnPlayerAdded(Player player, string teamName)
@@ -57,7 +72,7 @@ else
     async void LoadData()
     {
         _players = await _httpClient.GetFromJsonAsync<List<Player>>("players") ?? _players;
-        _teams = await _httpClient.GetFromJsonAsync<Team[]>("teams");
+        _teams = await _httpClient.GetFromJsonAsync<Team[]>("teams") ?? _teams;
 
         foreach (var player in _players)
         {
@@ -71,5 +86,8 @@ else
 
     async Task OpenPlayerEditor(Guid playerId)
     {
+        await DialogService.OpenAsync<PlayerEdit>($"Редактирование игрока",
+            new Dictionary<string, object>() { { "PlayerId", playerId } },
+            new DialogOptions() { Width = "700px", Height = "720px" });
     }
 }
